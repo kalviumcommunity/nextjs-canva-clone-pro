@@ -1,3 +1,4 @@
+
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import type { NextAuthConfig } from "next-auth";
@@ -67,8 +68,8 @@ export default {
 
         return user;
       },
-    }), 
-    GitHub, 
+    }),
+    GitHub,
     Google
   ],
   pages: {
@@ -79,19 +80,25 @@ export default {
     strategy: "jwt",
   },
   callbacks: {
+    jwt({ token, user }) {
+      // Store the user ID in the JWT when the user logs in.
+      if (user) {
+        token.id = user.id;
+      }
+
+      // Preserve the ID from the existing token.
+      token.id = token.id ?? token.sub;
+
+      return token;
+    },
+
     session({ session, token }) {
-      if (token.id) {
+      // Make the authenticated user ID available in the session.
+      if (session.user && token.id) {
         session.user.id = token.id;
       }
 
       return session;
     },
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;  
-      }
-
-      return token;
-    }
   },
-} satisfies NextAuthConfig
+} satisfies NextAuthConfig;
